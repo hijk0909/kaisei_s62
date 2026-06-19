@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>同窓会出欠登録</title>
+<style>
+  :root {
+    --navy: #2c3e50;
+    --navy-light: #34495e;
+    --gold: #c9a35c;
+    --gold-dark: #a8843f;
+    --bg: #f7f5f0;
+    --paper: #ffffff;
+    --text: #2c2c2c;
+    --text-light: #6b6b6b;
+    --border: #d8d3c8;
+    --present: #3d7a5c;
+    --absent: #a85c3d;
+  }
+
+  * {
+    box-sizing: border-box;
+  }
+
+  body {
+    margin: 0;
+    background: var(--bg);
+    font-family: "Hiragino Mincho ProN", "Yu Mincho", "Hiragino Kaku Gothic ProN", "Meiryo", serif;
+    color: var(--text);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 24px 16px 60px;
+  }
+
+  header {
+    width: 100%;
+    max-width: 480px;
+    text-align: center;
+    margin-bottom: 28px;
+  }
+
+  .eyebrow {
+    letter-spacing: 0.3em;
+    font-size: 13px;
+    color: var(--gold-dark);
+    margin-bottom: 8px;
+  }
+
+  h1 {
+    font-size: 28px;
+    font-weight: 600;
+    margin: 0;
+    color: var(--navy);
+    letter-spacing: 0.05em;
+  }
+
+  .underline {
+    width: 56px;
+    height: 3px;
+    background: var(--gold);
+    margin: 14px auto 0;
+  }
+
+  form {
+    width: 100%;
+    max-width: 480px;
+    background: var(--paper);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 32px 28px 28px;
+    box-shadow: 0 2px 12px rgba(44, 62, 80, 0.06);
+  }
+
+  .field {
+    margin-bottom: 24px;
+  }
+
+  .field:last-of-type {
+    margin-bottom: 0;
+  }
+
+  label {
+    display: block;
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--navy);
+    margin-bottom: 8px;
+  }
+
+  label .req {
+    color: var(--absent);
+    font-size: 12px;
+    font-weight: normal;
+    margin-left: 4px;
+  }
+
+  select, input[type="text"] {
+    width: 100%;
+    padding: 14px 12px;
+    font-size: 17px;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    background: var(--paper);
+    color: var(--text);
+    font-family: inherit;
+    -webkit-appearance: none;
+    appearance: none;
+  }
+
+  select {
+    background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3e%3cpath fill='%236b6b6b' d='M7 10l5 5 5-5z'/%3e%3c/svg%3e");
+    background-repeat: no-repeat;
+    background-position: right 12px center;
+    padding-right: 36px;
+  }
+
+  select:focus, input[type="text"]:focus {
+    outline: none;
+    border-color: var(--gold);
+    box-shadow: 0 0 0 3px rgba(201, 163, 92, 0.2);
+  }
+
+  .name-row {
+    display: flex;
+    gap: 12px;
+  }
+
+  .name-row .field {
+    flex: 1;
+    margin-bottom: 0;
+  }
+
+  .attendance-group {
+    display: flex;
+    gap: 12px;
+  }
+
+  .attendance-option {
+    flex: 1;
+  }
+
+  .attendance-option input[type="radio"] {
+    position: absolute;
+    opacity: 0;
+    width: 0;
+    height: 0;
+  }
+
+  .attendance-option label {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0;
+    padding: 16px 8px;
+    border: 2px solid var(--border);
+    border-radius: 4px;
+    font-size: 17px;
+    font-weight: 600;
+    color: var(--text-light);
+    cursor: pointer;
+    transition: all 0.15s ease;
+    user-select: none;
+  }
+
+  .attendance-option input[type="radio"]:checked + label {
+    border-color: var(--present);
+    background: rgba(61, 122, 92, 0.08);
+    color: var(--present);
+  }
+
+  .attendance-option.absent input[type="radio"]:checked + label {
+    border-color: var(--absent);
+    background: rgba(168, 92, 61, 0.08);
+    color: var(--absent);
+  }
+
+  .submit-btn {
+    width: 100%;
+    margin-top: 32px;
+    padding: 16px;
+    font-size: 18px;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    color: #fff;
+    background: var(--navy);
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background 0.15s ease;
+    font-family: inherit;
+  }
+
+  .submit-btn:hover {
+    background: var(--navy-light);
+  }
+
+  .submit-btn:active {
+    transform: translateY(1px);
+  }
+
+  .result {
+    width: 100%;
+    max-width: 480px;
+    margin-top: 20px;
+    padding: 20px;
+    border-radius: 4px;
+    font-size: 15px;
+    line-height: 1.7;
+    display: none;
+  }
+
+  .result.show {
+    display: block;
+  }
+
+  .result.success {
+    background: rgba(61, 122, 92, 0.08);
+    border: 1px solid var(--present);
+    color: var(--navy);
+  }
+
+  .result.error {
+    background: rgba(168, 92, 61, 0.08);
+    border: 1px solid var(--absent);
+    color: var(--navy);
+  }
+
+  .result-title {
+    font-weight: 700;
+    margin-bottom: 8px;
+  }
+
+  .result pre {
+    background: rgba(0,0,0,0.04);
+    padding: 12px;
+    border-radius: 4px;
+    overflow-x: auto;
+    font-size: 13px;
+    font-family: Menlo, Consolas, monospace;
+    white-space: pre-wrap;
+    word-break: break-all;
+  }
+
+  footer {
+    margin-top: 36px;
+    font-size: 12px;
+    color: var(--text-light);
+    text-align: center;
+  }
+
+  @media (max-width: 380px) {
+    h1 { font-size: 24px; }
+    form { padding: 24px 20px 20px; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="eyebrow">REUNION ATTENDANCE</div>
+  <h1>同窓会出欠登録</h1>
+  <div class="underline"></div>
+</header>
+
+<form id="attendanceForm">
+
+  <div class="field">
+    <label for="kumi">組<span class="req">必須</span></label>
+    <select id="kumi" name="kumi" required>
+      <option value="" disabled selected>選択してください</option>
+      <option value="1組">1組</option>
+      <option value="2組">2組</option>
+      <option value="3組">3組</option>
+      <option value="4組">4組</option>
+      <option value="5組">5組</option>
+      <option value="6組">6組</option>
+      <option value="7組">7組</option>
+      <option value="8組">8組</option>
+    </select>
+  </div>
+
+  <div class="name-row">
+    <div class="field">
+      <label for="sei">姓<span class="req">必須</span></label>
+      <input type="text" id="sei" name="sei" placeholder="例：山田" required>
+    </div>
+    <div class="field">
+      <label for="mei">名<span class="req">必須</span></label>
+      <input type="text" id="mei" name="mei" placeholder="例：太郎" required>
+    </div>
+  </div>
+
+  <div class="field">
+    <label>出欠<span class="req">必須</span></label>
+    <div class="attendance-group">
+      <div class="attendance-option present">
+        <input type="radio" id="att-present" name="attendance" value="出席" required>
+        <label for="att-present">出席</label>
+      </div>
+      <div class="attendance-option absent">
+        <input type="radio" id="att-absent" name="attendance" value="欠席">
+        <label for="att-absent">欠席</label>
+      </div>
+    </div>
+  </div>
+
+  <button type="submit" class="submit-btn">登録する</button>
+
+</form>
+
+<div class="result" id="result"></div>
+
+<footer>同窓会幹事団</footer>
+
+<script>
+  const form = document.getElementById('attendanceForm');
+  const resultBox = document.getElementById('result');
+
+  form.addEventListener('submit', function (e) {
+    e.preventDefault();
+
+    const data = {
+      kumi: document.getElementById('kumi').value,
+      sei: document.getElementById('sei').value.trim(),
+      mei: document.getElementById('mei').value.trim(),
+      attendance: form.attendance.value,
+      timestamp: new Date().toISOString()
+    };
+
+    // ここではまだサーバーに送信せず、入力内容をJSON形式で確認表示します。
+    // 次のステップでバックエンド（Cloudflare Workers等）に接続し、
+    // 実際にJSONファイルへ書き込む処理を追加します。
+    console.log('登録データ（JSON）:', data);
+
+    resultBox.className = 'result success show';
+    resultBox.innerHTML =
+      '<div class="result-title">登録内容を確認しました（仮表示）</div>' +
+      '<p>現段階では実際の保存はまだ行われません。次のステップでサーバーへの保存機能を追加します。</p>' +
+      '<pre>' + JSON.stringify(data, null, 2) + '</pre>';
+
+    form.reset();
+  });
+</script>
+
+</body>
+</html>
