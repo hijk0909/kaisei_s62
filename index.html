@@ -316,32 +316,61 @@
 <footer>同窓会幹事団</footer>
 
 <script>
+  // ここにご自身のWorkers APIのURLを設定してください
+  const API_URL = 'https://kaisei-s62-202702-api.masashi-hijikata.workers.dev';
+
   const form = document.getElementById('attendanceForm');
   const resultBox = document.getElementById('result');
+  const submitBtn = form.querySelector('.submit-btn');
 
-  form.addEventListener('submit', function (e) {
+  form.addEventListener('submit', async function (e) {
     e.preventDefault();
 
     const data = {
       kumi: document.getElementById('kumi').value,
       sei: document.getElementById('sei').value.trim(),
       mei: document.getElementById('mei').value.trim(),
-      attendance: form.attendance.value,
-      timestamp: new Date().toISOString()
+      attendance: form.attendance.value
     };
 
-    // ここではまだサーバーに送信せず、入力内容をJSON形式で確認表示します。
-    // 次のステップでバックエンド（Cloudflare Workers等）に接続し、
-    // 実際にJSONファイルへ書き込む処理を追加します。
-    console.log('登録データ（JSON）:', data);
+    // 二重送信を防止
+    submitBtn.disabled = true;
+    submitBtn.textContent = '送信中…';
+    resultBox.className = 'result show';
+    resultBox.style.background = 'rgba(44, 62, 80, 0.06)';
+    resultBox.style.border = '1px solid var(--border)';
+    resultBox.innerHTML = '<div class="result-title">送信しています…</div>';
 
-    resultBox.className = 'result success show';
-    resultBox.innerHTML =
-      '<div class="result-title">登録内容を確認しました（仮表示）</div>' +
-      '<p>現段階では実際の保存はまだ行われません。次のステップでサーバーへの保存機能を追加します。</p>' +
-      '<pre>' + JSON.stringify(data, null, 2) + '</pre>';
+    try {
+      const response = await fetch(API_URL + '/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+      });
 
-    form.reset();
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.error || '登録に失敗しました');
+      }
+
+      resultBox.className = 'result success show';
+      resultBox.innerHTML =
+        '<div class="result-title">登録が完了しました</div>' +
+        '<p>' + data.kumi + '　' + data.sei + ' ' + data.mei + '　様　（' + data.attendance + '）を受け付けました。</p>';
+
+      form.reset();
+
+    } catch (err) {
+      resultBox.className = 'result error show';
+      resultBox.innerHTML =
+        '<div class="result-title">登録できませんでした</div>' +
+        '<p>通信エラーが発生しました。電波の良い場所で、もう一度お試しください。</p>' +
+        '<p style="font-size:13px;color:var(--text-light);">(' + err.message + ')</p>';
+    } finally {
+      submitBtn.disabled = false;
+      submitBtn.textContent = '登録する';
+    }
   });
 </script>
 
