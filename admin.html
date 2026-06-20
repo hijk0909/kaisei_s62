@@ -1,0 +1,547 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>同窓会出欠管理（管理者用）</title>
+<style>
+  :root {
+    --navy: #2c3e50;
+    --navy-light: #34495e;
+    --gold: #c9a35c;
+    --gold-dark: #a8843f;
+    --bg: #f7f5f0;
+    --paper: #ffffff;
+    --text: #2c2c2c;
+    --text-light: #6b6b6b;
+    --border: #d8d3c8;
+    --present: #3d7a5c;
+    --absent: #a85c3d;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    background: var(--bg);
+    font-family: "Hiragino Mincho ProN", "Yu Mincho", "Hiragino Kaku Gothic ProN", "Meiryo", serif;
+    color: var(--text);
+    min-height: 100vh;
+    padding: 24px 16px 60px;
+  }
+
+  .wrap {
+    max-width: 760px;
+    margin: 0 auto;
+  }
+
+  header {
+    text-align: center;
+    margin-bottom: 28px;
+  }
+
+  .eyebrow {
+    letter-spacing: 0.3em;
+    font-size: 13px;
+    color: var(--gold-dark);
+    margin-bottom: 8px;
+  }
+
+  h1 {
+    font-size: 26px;
+    font-weight: 600;
+    margin: 0;
+    color: var(--navy);
+    letter-spacing: 0.05em;
+  }
+
+  .underline {
+    width: 56px;
+    height: 3px;
+    background: var(--gold);
+    margin: 14px auto 0;
+  }
+
+  /* ログインパネル */
+  #loginPanel {
+    max-width: 420px;
+    margin: 0 auto;
+    background: var(--paper);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 32px 28px;
+    box-shadow: 0 2px 12px rgba(44, 62, 80, 0.06);
+  }
+
+  #loginPanel label {
+    display: block;
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--navy);
+    margin-bottom: 8px;
+  }
+
+  #loginPanel input[type="password"] {
+    width: 100%;
+    padding: 14px 12px;
+    font-size: 17px;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    font-family: inherit;
+  }
+
+  .btn {
+    padding: 14px 20px;
+    font-size: 16px;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+    color: #fff;
+    background: var(--navy);
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-family: inherit;
+  }
+
+  .btn:hover { background: var(--navy-light); }
+  .btn:disabled { opacity: 0.5; cursor: default; }
+
+  .btn-full { width: 100%; margin-top: 18px; }
+
+  .btn-danger {
+    background: var(--absent);
+    padding: 8px 14px;
+    font-size: 13px;
+  }
+  .btn-danger:hover { background: #8c4a30; }
+
+  .error-msg {
+    margin-top: 14px;
+    color: var(--absent);
+    font-size: 14px;
+  }
+
+  /* メイン管理画面 */
+  #mainPanel { display: none; }
+
+  .summary {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+  }
+
+  .summary-card {
+    flex: 1;
+    min-width: 110px;
+    background: var(--paper);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 16px;
+    text-align: center;
+  }
+
+  .summary-card .num {
+    font-size: 28px;
+    font-weight: 700;
+    color: var(--navy);
+  }
+
+  .summary-card .label {
+    font-size: 13px;
+    color: var(--text-light);
+    margin-top: 4px;
+  }
+
+  .toolbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 14px;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+
+  .toolbar select {
+    padding: 10px 12px;
+    font-size: 15px;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    font-family: inherit;
+    background: var(--paper);
+  }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    background: var(--paper);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    overflow: hidden;
+    font-size: 14px;
+  }
+
+  th, td {
+    padding: 12px 10px;
+    text-align: left;
+    border-bottom: 1px solid var(--border);
+  }
+
+  th {
+    background: var(--navy);
+    color: #fff;
+    font-weight: 600;
+    font-size: 13px;
+  }
+
+  tr:last-child td { border-bottom: none; }
+
+  tr:hover td { background: rgba(201, 163, 92, 0.06); }
+
+  .badge {
+    display: inline-block;
+    padding: 3px 10px;
+    border-radius: 12px;
+    font-size: 12px;
+    font-weight: 700;
+  }
+
+  .badge.present {
+    background: rgba(61, 122, 92, 0.12);
+    color: var(--present);
+  }
+
+  .badge.absent {
+    background: rgba(168, 92, 61, 0.12);
+    color: var(--absent);
+  }
+
+  .small-text {
+    font-size: 12px;
+    color: var(--text-light);
+  }
+
+  .empty-state {
+    text-align: center;
+    padding: 40px 20px;
+    color: var(--text-light);
+    background: var(--paper);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+  }
+
+  .loading {
+    text-align: center;
+    padding: 30px;
+    color: var(--text-light);
+  }
+
+  /* モーダル確認 */
+  .modal-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(44, 62, 80, 0.5);
+    align-items: center;
+    justify-content: center;
+    padding: 16px;
+    z-index: 10;
+  }
+
+  .modal-overlay.show {
+    display: flex;
+  }
+
+  .modal-box {
+    background: var(--paper);
+    border-radius: 4px;
+    padding: 28px;
+    max-width: 360px;
+    width: 100%;
+  }
+
+  .modal-box h3 {
+    margin: 0 0 12px;
+    color: var(--navy);
+  }
+
+  .modal-actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 20px;
+  }
+
+  .modal-actions .btn {
+    flex: 1;
+  }
+
+  .btn-cancel {
+    background: var(--border);
+    color: var(--text);
+  }
+
+  @media (max-width: 600px) {
+    table, thead, tbody, th, td, tr { display: block; }
+    thead { display: none; }
+    tr {
+      background: var(--paper);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      margin-bottom: 10px;
+      padding: 12px;
+    }
+    td {
+      border: none;
+      padding: 4px 0;
+    }
+    td::before {
+      content: attr(data-label);
+      font-weight: 700;
+      color: var(--navy);
+      display: inline-block;
+      width: 64px;
+      font-size: 12px;
+    }
+  }
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <header>
+    <div class="eyebrow">REUNION ATTENDANCE — ADMIN</div>
+    <h1>同窓会出欠管理（管理者用）</h1>
+    <div class="underline"></div>
+  </header>
+
+  <!-- ログインパネル -->
+  <div id="loginPanel">
+    <label for="passwordInput">管理者パスワード</label>
+    <input type="password" id="passwordInput" placeholder="パスワードを入力してください">
+    <button class="btn btn-full" id="loginBtn">ログイン</button>
+    <div class="error-msg" id="loginError"></div>
+  </div>
+
+  <!-- メイン管理画面 -->
+  <div id="mainPanel">
+
+    <div class="summary" id="summary"></div>
+
+    <div class="toolbar">
+      <select id="filterKumi">
+        <option value="all">すべての組</option>
+        <option value="1組">1組</option>
+        <option value="2組">2組</option>
+        <option value="3組">3組</option>
+        <option value="4組">4組</option>
+        <option value="5組">5組</option>
+        <option value="6組">6組</option>
+        <option value="7組">7組</option>
+        <option value="8組">8組</option>
+      </select>
+      <button class="btn" id="refreshBtn">最新の状態に更新</button>
+    </div>
+
+    <div id="listArea"></div>
+
+  </div>
+</div>
+
+<!-- 削除確認モーダル -->
+<div class="modal-overlay" id="modalOverlay">
+  <div class="modal-box">
+    <h3>削除の確認</h3>
+    <p id="modalText"></p>
+    <p class="small-text">この操作は取り消せません。</p>
+    <div class="modal-actions">
+      <button class="btn btn-cancel" id="modalCancel">キャンセル</button>
+      <button class="btn btn-danger" id="modalConfirm" style="padding:14px;">削除する</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  const API_URL = 'https://kaisei-s62-202702-api.masashi-hijikata.workers.dev';
+
+  let adminPassword = '';
+  let allRecords = [];
+  let pendingDeleteId = null;
+
+  const loginPanel = document.getElementById('loginPanel');
+  const mainPanel = document.getElementById('mainPanel');
+  const passwordInput = document.getElementById('passwordInput');
+  const loginBtn = document.getElementById('loginBtn');
+  const loginError = document.getElementById('loginError');
+  const listArea = document.getElementById('listArea');
+  const summary = document.getElementById('summary');
+  const filterKumi = document.getElementById('filterKumi');
+  const refreshBtn = document.getElementById('refreshBtn');
+  const modalOverlay = document.getElementById('modalOverlay');
+  const modalText = document.getElementById('modalText');
+  const modalCancel = document.getElementById('modalCancel');
+  const modalConfirm = document.getElementById('modalConfirm');
+
+  loginBtn.addEventListener('click', login);
+  passwordInput.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') login();
+  });
+
+  async function login() {
+    const pw = passwordInput.value;
+    if (!pw) return;
+
+    loginBtn.disabled = true;
+    loginBtn.textContent = '確認中…';
+    loginError.textContent = '';
+
+    try {
+      const res = await fetch(API_URL + '/list', {
+        headers: { 'X-Admin-Password': pw }
+      });
+      const data = await res.json();
+
+      if (!res.ok) {
+        throw new Error(data.error || 'ログインに失敗しました');
+      }
+
+      adminPassword = pw;
+      allRecords = data.records;
+
+      loginPanel.style.display = 'none';
+      mainPanel.style.display = 'block';
+      render();
+
+    } catch (err) {
+      loginError.textContent = 'パスワードが正しくないか、通信エラーが発生しました。';
+    } finally {
+      loginBtn.disabled = false;
+      loginBtn.textContent = 'ログイン';
+    }
+  }
+
+  async function fetchList() {
+    listArea.innerHTML = '<div class="loading">読み込み中…</div>';
+    try {
+      const res = await fetch(API_URL + '/list', {
+        headers: { 'X-Admin-Password': adminPassword }
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error);
+      allRecords = data.records;
+      render();
+    } catch (err) {
+      listArea.innerHTML = '<div class="empty-state">データの取得に失敗しました。再読み込みしてください。</div>';
+    }
+  }
+
+  refreshBtn.addEventListener('click', fetchList);
+  filterKumi.addEventListener('change', render);
+
+  function render() {
+    const filter = filterKumi.value;
+    const filtered = filter === 'all'
+      ? allRecords
+      : allRecords.filter(r => r.kumi === filter);
+
+    // サマリー
+    const total = allRecords.length;
+    const presentCount = allRecords.filter(r => r.attendance === '出席').length;
+    const absentCount = allRecords.filter(r => r.attendance === '欠席').length;
+
+    summary.innerHTML = `
+      <div class="summary-card"><div class="num">${total}</div><div class="label">総登録数</div></div>
+      <div class="summary-card"><div class="num" style="color:var(--present)">${presentCount}</div><div class="label">出席</div></div>
+      <div class="summary-card"><div class="num" style="color:var(--absent)">${absentCount}</div><div class="label">欠席</div></div>
+    `;
+
+    if (filtered.length === 0) {
+      listArea.innerHTML = '<div class="empty-state">該当するデータがありません。</div>';
+      return;
+    }
+
+    const rows = filtered.map(r => {
+      const dt = new Date(r.registeredAt);
+      const dateStr = dt.toLocaleString('ja-JP', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' });
+      const badgeClass = r.attendance === '出席' ? 'present' : 'absent';
+
+      return `
+        <tr>
+          <td data-label="組">${escapeHtml(r.kumi)}</td>
+          <td data-label="氏名">${escapeHtml(r.sei)} ${escapeHtml(r.mei)}</td>
+          <td data-label="出欠"><span class="badge ${badgeClass}">${r.attendance}</span></td>
+          <td data-label="登録日時"><span class="small-text">${dateStr}</span></td>
+          <td data-label="操作"><button class="btn btn-danger" onclick="requestDelete('${r.id}', '${escapeHtml(r.kumi)} ${escapeHtml(r.sei)} ${escapeHtml(r.mei)}')">削除</button></td>
+        </tr>
+      `;
+    }).join('');
+
+    listArea.innerHTML = `
+      <table>
+        <thead>
+          <tr>
+            <th>組</th>
+            <th>氏名</th>
+            <th>出欠</th>
+            <th>登録日時</th>
+            <th>操作</th>
+          </tr>
+        </thead>
+        <tbody>${rows}</tbody>
+      </table>
+    `;
+  }
+
+  function escapeHtml(str) {
+    return String(str)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;');
+  }
+
+  // 削除確認モーダル
+  window.requestDelete = function(id, label) {
+    pendingDeleteId = id;
+    modalText.textContent = `「${label}」のデータを削除します。よろしいですか？`;
+    modalOverlay.classList.add('show');
+  };
+
+  modalCancel.addEventListener('click', () => {
+    modalOverlay.classList.remove('show');
+    pendingDeleteId = null;
+  });
+
+  modalConfirm.addEventListener('click', async () => {
+    if (!pendingDeleteId) return;
+
+    modalConfirm.disabled = true;
+    modalConfirm.textContent = '削除中…';
+
+    try {
+      const res = await fetch(API_URL + '/delete', {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Admin-Password': adminPassword
+        },
+        body: JSON.stringify({ id: pendingDeleteId })
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error);
+
+      allRecords = allRecords.filter(r => r.id !== pendingDeleteId);
+      render();
+
+    } catch (err) {
+      alert('削除に失敗しました: ' + err.message);
+    } finally {
+      modalConfirm.disabled = false;
+      modalConfirm.textContent = '削除する';
+      modalOverlay.classList.remove('show');
+      pendingDeleteId = null;
+    }
+  });
+</script>
+
+</body>
+</html>
